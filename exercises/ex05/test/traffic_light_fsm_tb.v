@@ -11,7 +11,7 @@ module traffic_light_fsm_tb;
     integer pass_count = 0;
     integer total_count = 0;
 
-    task check(input ok, input [511:0] label);
+    task check(input ok, input [767:0] label);
         begin
             total_count = total_count + 1;
             if (ok) pass_count = pass_count + 1;
@@ -28,7 +28,7 @@ module traffic_light_fsm_tb;
     traffic_light_fsm #(.GREEN_TIME(GREEN_TIME), .MIN_GREEN_TIME(MIN_GREEN_TIME), .YELLOW_TIME(YELLOW_TIME))
         dut(.clk(clk), .rst(rst), .ped_request(ped_request), .ns_light(ns_light), .ew_light(ew_light));
 
-    task check_lights(input [1:0] exp_ns, input [1:0] exp_ew, input [511:0] label);
+    task check_lights(input [1:0] exp_ns, input [1:0] exp_ew, input [767:0] label);
         begin
             check(ns_light === exp_ns && ew_light === exp_ew, label);
         end

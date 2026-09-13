@@ -26,7 +26,7 @@ module adders_tb;
     integer k;
     integer seed;
 
-    task check_rc(input [N-1:0] a_val, input [N-1:0] b_val, input cin_val, input [511:0] label);
+    task check_rc(input [N-1:0] a_val, input [N-1:0] b_val, input cin_val, input [767:0] label);
         reg [N:0] exp;
         begin
             rc_a = a_val; rc_b = b_val; rc_cin = cin_val;

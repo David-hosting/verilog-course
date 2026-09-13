@@ -22,7 +22,7 @@ module alu32_tb;
 
     alu32 dut(.a(a), .b(b), .alu_control(alu_control), .result(result), .zero(zero), .overflow(overflow));
 
-    task check_full(input [31:0] exp_result, input exp_overflow, input [511:0] label);
+    task check_full(input [31:0] exp_result, input exp_overflow, input [767:0] label);
         reg exp_zero;
         begin
             exp_zero = (exp_result == 32'b0);
@@ -37,7 +37,7 @@ module alu32_tb;
     endtask
 
     task run(input [31:0] a_val, input [31:0] b_val, input [3:0] ctrl,
-             input [31:0] exp_result, input exp_overflow, input [511:0] label);
+             input [31:0] exp_result, input exp_overflow, input [767:0] label);
         begin
             a = a_val; b = b_val; alu_control = ctrl;
             #1;

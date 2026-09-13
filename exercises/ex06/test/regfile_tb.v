@@ -5,7 +5,7 @@ module regfile_tb;
     integer pass_count = 0;
     integer total_count = 0;
 
-    task check(input ok, input [511:0] label);
+    task check(input ok, input [767:0] label);
         begin
             total_count = total_count + 1;
             if (ok) pass_count = pass_count + 1;
