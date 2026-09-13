@@ -1,0 +1,35 @@
+name: Grade Exercises
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  grade:
+    name: ${{ matrix.exercise }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        exercise:
+          - ex01
+          - ex02
+          - ex03
+          - ex04
+          - ex05
+          - ex06
+          - ex07
+          - ex08
+          - ex09
+          - ex10
+          - ex11
+          - ex12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+
+      - name: Run tests for ${{ matrix.exercise }}
+        run: bash scripts/run_exercise.sh ${{ matrix.exercise }}

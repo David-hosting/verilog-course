@@ -1,0 +1,9 @@
+*.vvp
+*.out
+sim.out
+*.vcd
+*.lxt
+*.lxt2
+*.fst
+_solutions/
+.DS_Store
