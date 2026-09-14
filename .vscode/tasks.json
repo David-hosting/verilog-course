@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "inputs": [
+        {
+            "id": "exerciseId",
+            "type": "promptString",
+            "description": "Exercise number (01, 02, ... 12)",
+            "default": "01"
+        }
+    ],
+    "tasks": [
+        {
+            "label": "Run Verilog Exercise",
+            "type": "shell",
+            "command": "bash",
+            "args": ["scripts/run_exercise.sh", "ex${input:exerciseId}"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}

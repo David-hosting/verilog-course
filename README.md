@@ -29,6 +29,28 @@ on new material.
    every push and reports pass/fail per exercise as a separate check — that's
    your "submission" record.
 
+## Editor setup
+
+Open this folder in VS Code. It recommends the **Verilog-HDL/SystemVerilog**
+extension (syntax highlighting) on first open — accept the prompt, or
+install it manually (`mshr-h.veriloghdl`).
+
+There's no single "run" button the way Python or C has one — a testbench
+always needs to be compiled *together* with your source file before it can
+run. Instead, press **Ctrl+Shift+B** (Run Build Task) at any time: it asks
+which exercise number to test, then runs it in the integrated terminal.
+This is the same `scripts/run_exercise.sh` command below, just bound to a
+key (see `.vscode/tasks.json`).
+
+## Checking vs. submitting
+
+Unlike course tools that separate "check my code" from "submit for a
+grade," there's only one step here: **`git push` is both.** GitHub Actions
+runs the exact same test every push runs locally, and reports pass/fail
+right on that commit — there's no separate submission target. Iterate
+locally (or on a scratch branch) until `run_exercise.sh` prints
+`RESULT: PASS`, then push to `main`; the push itself is the record.
+
 ## Local toolchain
 
 This repo assumes [Icarus Verilog](http://iverilog.icarus.com/) (`iverilog`,
