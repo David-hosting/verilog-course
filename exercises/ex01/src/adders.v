@@ -20,8 +20,8 @@ module full_adder(
     xor partialSum(abXor, a, b);
     xor _sum(sum, abXor, cin);
 
-    and carryAB(abCarry, a, b);
-    and carryAB(cinCarry, abXor, cin);
+    and c1(abCarry, a, b);
+    and c2(cinCarry, abXor, cin);
 
     or carryOut(cout, abCarry, cinCarry);
 
@@ -45,15 +45,21 @@ module ripple_carry_adder #(
     // to an internal wire is fine -- the "gates only" rule is about the
     // logic itself, not about connecting ports).
 
+    wire [N:0] carry;
+
     genvar i;
     
-    assign cout = cin;
+    assign carry[0] = cin;
 
     generate
-        for (i = 0; i < N; i = i + 1) : adder_chain
-        begin
-            full_adder FA(.a(a[i]), .b(b[i]), .sum(sum[i]), .cin(cout), .cout(cin) );
+        for (i = 0; i < N; i = i + 1) begin : adder_chain
+            full_adder FA(
+                .a(a[i]), .b(b[i]), .cin(carry[i]),
+                .sum(sum[i]), .cout(carry[i+1])
+            );
         end
-        
+    endgenerate
+
+    assign cout = carry[N];
 
 endmodule
