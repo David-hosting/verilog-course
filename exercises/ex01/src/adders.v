@@ -16,6 +16,15 @@ module full_adder(
     // Remember: gate instantiation syntax is
     //   gate_type instance_name(output, input1, input2, ...);
 
+    wire abXor, abCarry, cinCarry;
+    xor partialSum(abXor, a, b);
+    xor _sum(sum, abXor, cin);
+
+    and carryAB(abCarry, a, b);
+    and carryAB(cinCarry, abXor, cin);
+
+    or carryOut(cout, abCarry, cinCarry);
+
 endmodule
 
 
@@ -35,5 +44,16 @@ module ripple_carry_adder #(
     // Finally assign cout = carry[N] (a plain 'assign' for wiring an output
     // to an internal wire is fine -- the "gates only" rule is about the
     // logic itself, not about connecting ports).
+
+    genvar i;
+    
+    assign cout = cin;
+
+    generate
+        for (i = 0; i < N; i = i + 1) : adder_chain
+        begin
+            full_adder FA(.a(a[i]), .b(b[i]), .sum(sum[i]), .cin(cout), .cout(cin) );
+        end
+        
 
 endmodule
