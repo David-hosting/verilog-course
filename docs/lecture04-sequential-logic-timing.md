@@ -99,9 +99,11 @@ fed directly into synchronous logic — you'll build the standard fix (a
 This is also *why* a clock has a maximum frequency for a given design: the
 clock period must be long enough for the slowest combinational path between
 two flip-flops to settle, **plus** that next flip-flop's setup time. This
-`t_clk-to-q + t_combinational + t_setup ≤ T_clock` inequality is the single
-equation that all static timing analysis (STA) in real VLSI design flows
-is built around.
+`t_v + t_pd(max) + t_setup ≤ T_clock` inequality — `t_v` being the source
+flip-flop's clock-to-Q delay, `t_pd(max)` the worst-case propagation delay
+through the combinational logic in between — is the single equation that
+all static timing analysis (STA) in real VLSI design flows is built
+around.
 
 ## Where this fits in MIPS / architecture
 
