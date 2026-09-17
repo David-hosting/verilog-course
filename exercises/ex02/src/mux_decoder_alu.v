@@ -48,9 +48,9 @@ module decoder3to8(
     always @(*) begin
         out = 2'b0;
 
+        // in is 3 bit -> As the index it is being translated into base10 for indexing such that it covers 0 to 7 (all out indexes)
         if (en)
-            // in is 3 bit -> As the index it is being translated into base10 for indexing such that it covers 0 to 7 (all out indexes)
-            out[in] = 1'b1
+            out[in] = 1'b1;
     end
 
 endmodule
