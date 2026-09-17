@@ -101,9 +101,28 @@ clock period must be long enough for the slowest combinational path between
 two flip-flops to settle, **plus** that next flip-flop's setup time. This
 `t_v + t_pd(max) + t_setup ≤ T_clock` inequality — `t_v` being the source
 flip-flop's clock-to-Q delay, `t_pd(max)` the worst-case propagation delay
-through the combinational logic in between — is the single equation that
-all static timing analysis (STA) in real VLSI design flows is built
+through the combinational logic in between — is one of the two equations
+that all static timing analysis (STA) in real VLSI design flows is built
 around.
+
+The other is a **hold-time** check, and it's easy to mix up with the one
+above: `t_v(min) + t_pd(min) > t_hold`. This time it's the *fastest* the
+data could possibly arrive that matters — if the source flip-flop's
+clock-to-Q delay and the combinational path's propagation delay are both
+at their *minimum* (best-case, not worst-case), the new data must still
+not reach the next flip-flop's input before that flip-flop's hold window
+(measured from the *same* clock edge) has closed. If it arrives too early,
+the next flip-flop could latch the *new* value instead of the one it was
+supposed to capture from before this edge — silently corrupting state, not
+just running slow.
+
+This is also why a hold violation is far more dangerous in practice than a
+setup violation: a setup violation can always be fixed by slowing the
+clock down (increasing `T_clock` relaxes the first inequality), but the
+second inequality doesn't have `T_clock` in it at all — a hold violation
+exists at *every* clock frequency, including a clock that never ticks
+again. It has to be fixed structurally (adding deliberate delay to the
+path, or a faster/slower cell choice), not by changing timing elsewhere.
 
 ## Where this fits in MIPS / architecture
 
