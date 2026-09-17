@@ -35,7 +35,7 @@ module mips_datapath(
     reg [31:0] pc;
     assign pc_out = pc;
 
-    // TODO: wire [31:0] pc_plus4 = pc + 32'd4;
+    // TODO: you'll need "PC + 4" available in a couple of places below.
 
     // ---- instruction fetch ----
     wire [31:0] instr;
@@ -49,12 +49,14 @@ module mips_datapath(
     wire [15:0] imm16     = instr[15:0];
     assign funct          = instr[5:0];
 
-    // TODO: wire [31:0] sign_ext_imm = {{16{imm16[15]}}, imm16};
+    // TODO: widen imm16 to 32 bits. This has to preserve sign -- think
+    // about which bit of imm16 tells you the sign, and what that bit
+    // should be replicated into.
 
     // ---- register file ----
     wire [31:0] read_data1, read_data2;
-    wire [4:0]  write_reg;   // TODO: reg_dst ? rd : rt
-    wire [31:0] write_back_data; // TODO: mem_to_reg ? mem_read_data : alu_result
+    wire [4:0]  write_reg;       // which register this instruction writes: rd or rt?
+    wire [31:0] write_back_data; // what gets written back: the ALU result or memory data?
 
     regfile32 rf(
         .clk(clk), .we(reg_write),
@@ -63,7 +65,7 @@ module mips_datapath(
     );
 
     // ---- ALU ----
-    wire [31:0] alu_operand2; // TODO: alu_src ? sign_ext_imm : read_data2
+    wire [31:0] alu_operand2; // the ALU's second operand: a register value, or the immediate?
     wire [31:0] alu_result;
     wire        alu_overflow_unused;
 
@@ -80,16 +82,26 @@ module mips_datapath(
         .read_data(mem_read_data)
     );
 
+    // TODO: write_reg, write_back_data, and alu_operand2 above are each a
+    // straightforward 2-to-1 choice driven by one of this module's control
+    // inputs -- decide which control signal picks which option for each,
+    // using the port comments as a guide, and drive those three wires
+    // (a plain assign with a ternary is the simplest way).
+
     // ---- next-PC logic ----
-    // TODO: wire [31:0] branch_target = pc_plus4 + (sign_ext_imm << 2);
-    // TODO: wire branch_taken = branch & zero_flag;
-    // TODO: wire [31:0] next_pc = branch_taken ? branch_target : pc_plus4;
+    // TODO: the branch target address is PC+4 plus the sign-extended
+    // immediate -- but the immediate counts *instructions*, not bytes, so
+    // it needs scaling before it's added (every instruction is 4 bytes).
+    // TODO: the branch is only actually taken if this instruction *is* a
+    // branch AND the ALU's comparison came out equal.
+    // TODO: PC's next value is the branch target if taken, otherwise
+    // just PC+4.
 
     always @(posedge clk) begin
         if (rst)
             pc <= 32'b0;
         else
-            pc <= 32'b0; // TODO: replace with next_pc
+            pc <= 32'b0; // TODO: replace with the next-PC value derived above.
     end
 
 endmodule

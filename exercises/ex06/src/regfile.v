@@ -11,13 +11,17 @@ module regfile32(
     output [31:0] rd2
 );
 
-    // TODO: reg [31:0] regs [0:31];
-
-    // TODO: always @(posedge clk) block: if (we && wa != 0) regs[wa] <= wd;
-    // (guarding wa!=0 here is the simplest way to make register 0 permanently
-    // read as zero -- it just never gets written).
-
-    // TODO: assign rd1 = (ra1 == 5'b0) ? 32'b0 : regs[ra1];
-    // TODO: assign rd2 = (ra2 == 5'b0) ? 32'b0 : regs[ra2];
+    // TODO: you need storage for 32 words of 32 bits each. Lecture 7
+    // covers exactly this: an array of registers is declared like a
+    // vector, but with a second range for the number of entries.
+    //
+    // TODO: the write side is synchronous (posedge clk), gated by `we`.
+    // Register 0 has to permanently read as zero -- decide whether you
+    // enforce that on the write side (refuse to ever store into address 0)
+    // or the read side (override the read value when the address is 0).
+    // Either is a valid way to satisfy the spec; you don't need both.
+    //
+    // TODO: the read side is combinational, not clocked -- two independent
+    // read ports, each just selecting one stored word by address.
 
 endmodule

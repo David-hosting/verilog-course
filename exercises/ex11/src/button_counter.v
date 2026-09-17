@@ -6,8 +6,9 @@ module synchronizer(
     output sync_out
 );
 
-    // TODO: reg [1:0] sync_ff; always @(posedge clk) sync_ff <= {sync_ff[0], async_in};
-    // TODO: assign sync_out = sync_ff[1];
+    // TODO: exactly two flip-flops in series, each one just sampling the
+    // previous one's output on the clock edge. sync_out comes from the
+    // *second* one -- the first one is the one allowed to go metastable.
 
 endmodule
 
@@ -21,13 +22,12 @@ module debouncer #(
     output reg clean_out
 );
 
-    // TODO: a counter (width doesn't matter much for STABLE_CYCLES this
-    // small -- e.g. reg [7:0] counter) plus an always @(posedge clk) block
-    // implementing the rule from the lecture note / README:
-    //   rst            -> clean_out <= 0, counter <= 0
-    //   noisy_in==clean_out -> counter <= 0 (nothing pending)
-    //   counter == STABLE_CYCLES-1 -> clean_out <= noisy_in, counter <= 0
-    //   else -> counter <= counter + 1
+    // TODO: you'll need a counter that tracks how long noisy_in has
+    // disagreed with the current clean_out, uninterrupted. The moment
+    // noisy_in agrees with clean_out again, that streak is over. Only once
+    // the disagreement has lasted STABLE_CYCLES cycles in a row should
+    // clean_out actually change to match noisy_in. Reset should clear
+    // both clean_out and the counter.
 
 endmodule
 
@@ -49,9 +49,10 @@ module button_edge_counter #(
         .clk(clk), .rst(rst), .noisy_in(sync_out), .clean_out(clean_out)
     );
 
-    // TODO: reg clean_out_prev; always @(posedge clk) block updating it
-    // (also handle rst), then a rising-edge pulse: clean_out && !clean_out_prev.
-    // TODO: another always @(posedge clk) block: on rst, press_count <= 0;
-    // else if (rising edge pulse), press_count <= press_count + 1.
+    // TODO: press_count should increase by exactly one each time
+    // clean_out transitions from 0 to 1 -- not while it's simply *sitting*
+    // at 1. Detecting a transition (as opposed to a level) needs comparing
+    // a signal against what it was on the *previous* cycle -- that means
+    // remembering one extra bit of history.
 
 endmodule
