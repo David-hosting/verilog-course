@@ -8,6 +8,7 @@ module mux2to1 #(parameter WIDTH = 1) (
 );
 
     // TODO: out = sel ? in1 : in0
+    assign out = (sel == 1) ? in1 : in0;
 
 endmodule
 
@@ -27,6 +28,11 @@ module mux4to1 #(parameter WIDTH = 1) (
     // mux2to1 #(.WIDTH(WIDTH)) m1(.in0(in2), .in1(in3), .sel(sel[0]), .out(high_pick));
     // mux2to1 #(.WIDTH(WIDTH)) m2(.in0(low_pick), .in1(high_pick), .sel(sel[1]), .out(out));
 
+    wire [WIDTH-1:0] outA, outB;
+    mux2to1 #(.WIDTH(WIDTH)) MuxA(.in0(in0), .in1(in1), .sel(sel[0]), .out(outA));
+    mux2to1 #(.WIDTH(WIDTH)) MuxB(.in0(in2), .in1(in3), .sel(sel[0]), .out(outB));
+    mux2to1 #(.WIDTH(WIDTH)) MuxC(.in0(outA), .in1(outB), .sel(sel[1]), .out(out));
+
 endmodule
 
 
@@ -38,6 +44,14 @@ module decoder3to8(
 
     // TODO: always @(*) block. Assign out = 8'b0 first (avoid a latch!),
     // then if (en) set exactly the bit indexed by 'in'.
+
+    always @(*) begin
+        out = 2'b0;
+
+        if (en)
+            // in is 3 bit -> As the index it is being translated into base10 for indexing such that it covers 0 to 7 (all out indexes)
+            out[in] = 1'b1
+    end
 
 endmodule
 
@@ -56,5 +70,16 @@ module mini_alu4(
     // so every path is covered and no latch is inferred.
 
     assign zero = (result == 4'b0);
+
+    always @(*) begin
+        case (op) 
+            3'b000: result = a + b;
+            3'b001: result = a - b;
+            3'b010: result = a & b;
+            3'b011: result = a | b;
+            3'b100: result = ($signed(a) < $signed(b)) ? 4'b0001 : 4'b0;
+            default: result = 4'b0;
+        endcase  
+    end
 
 endmodule
