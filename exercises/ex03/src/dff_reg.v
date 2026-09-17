@@ -28,6 +28,6 @@ module reg8(
     // bit, all sharing the same clk/rst/en. You already have a pattern for
     // "stamp out N identical instances without writing them out by hand"
     // from Lecture 2's ripple_carry_adder -- the same construct applies
-    // here.
+    // here. 
 
 endmodule
