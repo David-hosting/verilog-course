@@ -7,18 +7,10 @@ It is, arguably, the single most-used building block in a CPU — every place
 where a signal needs to come from "here, or there, depending on what
 instruction this is" is a mux.
 
-Behavioral style, using a ternary operator:
-
-```verilog
-module mux2to1 #(parameter WIDTH = 1) (
-    input  [WIDTH-1:0] in0,
-    input  [WIDTH-1:0] in1,
-    input               sel,
-    output [WIDTH-1:0] out
-);
-    assign out = sel ? in1 : in0;
-endmodule
-```
+Behavioral style, using a ternary operator, is a one-line `assign`:
+`out = sel ? in1 : in0;` — "if `sel`, take `in1`, otherwise `in0`." Wrap
+that in a module with the ports the exercise specifies and a 2-to-1 mux is
+done.
 
 You can also build a wider mux *structurally*, out of smaller muxes — a
 4-to-1 mux is just a tree of three 2-to-1 muxes: two of them narrow four
@@ -32,16 +24,21 @@ A decoder turns a binary code into a one-hot output — exactly one output bit
 is set, indicating which input code was seen. A 3-to-8 decoder has a 3-bit
 input and 8 outputs, of which output `n` is 1 exactly when the input equals
 `n` (and only if an `enable` is asserted; if not enabled, every output is 0).
+Here's the pattern at a smaller scale — a 2-to-4 decoder:
 
 ```verilog
-module decoder3to8(input [2:0] in, input en, output reg [7:0] out);
+module decoder2to4(input [1:0] in, input en, output reg [3:0] out);
     always @(*) begin
-        out = 8'b0;
+        out = 4'b0;
         if (en)
             out[in] = 1'b1;
     end
 endmodule
 ```
+
+The trick worth noticing: `out[in]` indexes the output vector *by the
+input's value itself* — no `case` statement needed to enumerate every code.
+Scaling this up to 3 bits in and 8 bits out is the same idea, just wider.
 
 ## `always @(*)`: the behavioral combinational block
 
@@ -62,9 +59,9 @@ that matter enormously:
 ```verilog
 always @(*) begin
     result = 4'b0;       // default value first
-    case (op)
-        3'b000: result = a + b;
-        3'b001: result = a - b;
+    case (sel)
+        2'b00: result = x + y;
+        2'b01: result = x & y;
         // ...
     endcase
 end

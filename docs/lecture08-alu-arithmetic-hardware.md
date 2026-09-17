@@ -9,13 +9,10 @@ statement inside `always @(*)`, one branch per operation:
 
 ```verilog
 always @(*) begin
-    case (alu_control)
-        4'b0010: result = a + b;               // ADD
-        4'b0110: result = a - b;               // SUB
-        4'b0000: result = a & b;               // AND
-        4'b0001: result = a | b;               // OR
-        4'b1100: result = ~(a | b);            // NOR
-        4'b0111: result = ($signed(a) < $signed(b)) ? 32'd1 : 32'd0; // SLT
+    case (sel)
+        2'b00: result = a + b;
+        2'b01: result = a - b;
+        2'b10: result = a ^ b;
         default: result = 32'b0;
     endcase
 end

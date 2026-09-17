@@ -18,46 +18,60 @@ get in the habit of checking port order against a gate's documentation.
 ## Building a half adder and full adder
 
 A half adder adds two 1-bit numbers: `sum = a ^ b`, `carry = a & b`. That's
-it — two gates.
-
-A full adder adds three 1-bit numbers (two operands plus a carry-in), which
-is what you actually need to chain adders together:
+it — two gates, wired up exactly the way Lecture 1's `and_or` example
+wired an intermediate signal between gates:
 
 ```verilog
-module full_adder(input a, input b, input cin, output sum, output cout);
-    wire s1, c1, c2;
-    xor g1(s1, a, b);
-    xor g2(sum, s1, cin);
-    and g3(c1, a, b);
-    and g4(c2, s1, cin);
-    or  g5(cout, c1, c2);
+module half_adder(input a, input b, output sum, output carry);
+    xor g1(sum, a, b);
+    and g2(carry, a, b);
 endmodule
 ```
 
-Notice this is literally two half adders plus an OR gate combining the two
-carry conditions — the standard way a full adder is built from smaller
-pieces, and the same decomposition you'd see in a transistor-level schematic.
+A full adder adds three 1-bit numbers (two operands plus a carry-in), which
+is what you actually need to chain adders together. It's built from **two**
+half adders plus one more gate combining their two carry conditions — the
+same decomposition you'd see in a transistor-level schematic. Working out
+exactly which gates and which intermediate wires that takes is this
+lecture's exercise.
 
 ## Chaining adders: ripple-carry
 
-To add two N-bit numbers, chain N full adders, feeding each one's `cout`
-into the next one's `cin`:
+To add two N-bit numbers, you'd chain N full adders, feeding each one's
+carry-out into the next one's carry-in — but wiring up N instances by hand
+for an arbitrary N isn't practical. Verilog's `generate`/`genvar` construct
+solves exactly this: it's a `for` loop that runs *at elaboration time*, not
+in simulation, stamping out a fixed number of instances before simulation
+even starts. Here's the same idea applied to a different, smaller circuit —
+a chain of `N` XOR gates computing the running parity of an `N`-bit bus,
+each stage combining the previous stage's running result with one more
+input bit:
 
 ```verilog
+wire [N:0] parity_chain;
+assign parity_chain[0] = 1'b0;
+
 genvar i;
 generate
-    for (i = 0; i < N; i = i + 1) begin : adder_chain
-        full_adder fa(.a(a[i]), .b(b[i]), .cin(carry[i]),
-                       .sum(sum[i]), .cout(carry[i+1]));
+    for (i = 0; i < N; i = i + 1) begin : parity_stage
+        xor g(parity_chain[i+1], parity_chain[i], data[i]);
     end
 endgenerate
+
+assign parity_bit = parity_chain[N];
 ```
 
-`generate`/`genvar` is Verilog's way of writing a `for` loop *at
-elaboration time* — it doesn't run in simulation, it stamps out N copies of
-`full_adder` before simulation even starts. This is fundamentally different
-from a software for-loop; there is no "loop" in the final hardware, just N
-physical adder circuits wired in series.
+Notice the shape: a wire *array* one element wider than the instance count
+(`parity_chain[0]` seeded directly, `parity_chain[N]` read out as the
+result), and each generated instance reading one array element and writing
+the next. A ripple-carry adder needs the identical shape — an array of
+carries, one full adder per bit, each reading `carry[i]` and producing
+`carry[i+1]` — just with `full_adder` in place of `xor` and two more
+per-bit inputs feeding in alongside the chain.
+
+This construct is fundamentally different from a software for-loop: there
+is no "loop" left in the final hardware, just `N` physical gate instances
+wired in series, all existing and active simultaneously.
 
 This structure is called a **ripple-carry adder** because the carry signal
 has to physically propagate (ripple) through all N full adders before the

@@ -16,39 +16,45 @@ plus the read/write logic you write around it.
 
 ## Synchronous write, combinational read
 
-A register file (and most on-chip RAM) uses this pattern:
+A register file (and most on-chip RAM) uses this pattern. Here it is at a
+much smaller scale — 4 entries, 8 bits each, one read port:
 
 ```verilog
-module regfile32(
-    input         clk,
-    input         we,          // write enable
-    input  [4:0]  ra1, ra2,    // read address ports (5 bits = 32 registers)
-    input  [4:0]  wa,          // write address
-    input  [31:0] wd,          // write data
-    output [31:0] rd1, rd2     // read data
+module mem4x8(
+    input        clk,
+    input        we,           // write enable
+    input  [1:0] raddr,        // read address (2 bits = 4 entries)
+    input  [1:0] waddr,        // write address
+    input  [7:0] wdata,        // write data
+    output [7:0] rdata         // read data
 );
-    reg [31:0] regs [0:31];
+    reg [7:0] cells [0:3];
 
     // Write: synchronous, one clock edge, like any register.
     always @(posedge clk) begin
         if (we)
-            regs[wa] <= wd;
+            cells[waddr] <= wdata;
     end
 
     // Read: combinational, no clock involved at all — the read address
     // directly selects which stored word appears on the output, this cycle.
-    assign rd1 = regs[ra1];
-    assign rd2 = regs[ra2];
+    assign rdata = cells[raddr];
 endmodule
 ```
 
-Why asymmetric? A **write** changes stored state, so it must be
-synchronized to a clock edge exactly like any other flip-flop — otherwise
-"when exactly does the write happen" has no well-defined answer. A **read**
-doesn't change anything; it just needs to present whatever is *already*
-stored at that address, so it can be pure combinational logic (a big mux,
-conceptually — `regs[ra1]` is "select entry number `ra1` out of 32", which
-is exactly the mux idea from Lecture 3, just with 32 inputs instead of 4).
+Your register file needs to scale this up considerably: 32 entries instead
+of 4, 32 bits wide instead of 8, and — since a real instruction reads two
+source registers at once — a **second, independent** read port alongside
+the first, both reading combinationally from the same underlying array.
+
+Why the write/read asymmetry? A **write** changes stored state, so it must
+be synchronized to a clock edge exactly like any other flip-flop —
+otherwise "when exactly does the write happen" has no well-defined answer.
+A **read** doesn't change anything; it just needs to present whatever is
+*already* stored at that address, so it can be pure combinational logic (a
+big mux, conceptually — indexing the array by a read address is "select
+one entry out of many," exactly the mux idea from Lecture 3, just with 32
+inputs instead of 4 once your register file is full-size).
 
 This combinational-read/synchronous-write split is exactly how a real MIPS
 register file behaves: within a single clock cycle, an instruction can read
@@ -58,11 +64,12 @@ instruction's result only becomes visible starting from a clean clock edge.
 
 ## A read-during-write edge case
 
-What should `regs[ra1]` return if `ra1` happens to equal `wa` in the same
-cycle that `we` is asserted — reading and writing the same register at
-once? With the pattern above (nonblocking write, combinational read), the
-read sees the **old** value during that cycle — the write hasn't taken
-effect yet (nonblocking assignments update at the end of the time step).
+What should a read port return if its address happens to equal the write
+address in the same cycle a write is asserted — reading and writing the
+same entry at once? With the pattern above (nonblocking write,
+combinational read), the read sees the **old** value during that cycle —
+the write hasn't taken effect yet (nonblocking assignments update at the
+end of the time step).
 This matches real hardware and real MIPS semantics: an instruction reading
 register `$t0` while a *different*, earlier instruction's write to `$t0`
 is landing this same cycle will only see the new value starting next cycle

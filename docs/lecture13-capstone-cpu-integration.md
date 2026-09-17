@@ -6,33 +6,31 @@ Every piece exists and has already been individually tested: the register
 file (Lecture 7), the ALU (Lecture 8), the datapath (Lecture 9), and the
 control unit (Lecture 10). This lecture's exercise is pure **integration**
 — instantiate the datapath and the control unit, and connect the
-datapath's `opcode`/`funct` outputs into the control unit's inputs, and the
-control unit's control-signal outputs into the datapath's control inputs:
+datapath's decoded-instruction outputs into the control unit's inputs, and
+the control unit's control-signal outputs into the datapath's control
+inputs. In the abstract, wiring two modules together so each one's outputs
+feed the other's matching inputs looks like this:
 
 ```verilog
-module mips_cpu(
-    input  clk,
-    input  rst,
-    output [31:0] pc_out
+module top(
+    input        clk,
+    output [7:0] result
 );
-    wire [5:0] opcode, funct;
-    wire reg_dst, branch, mem_read, mem_to_reg, mem_write, alu_src, reg_write;
-    wire [3:0] alu_control;
+    wire [3:0] flag_a, flag_b;
 
-    mips_datapath dp(
-        .clk(clk), .rst(rst),
-        .reg_dst(reg_dst), .branch(branch), .mem_read(mem_read), .mem_to_reg(mem_to_reg),
-        .alu_control(alu_control), .mem_write(mem_write), .alu_src(alu_src), .reg_write(reg_write),
-        .pc_out(pc_out), .opcode(opcode), .funct(funct), .zero_flag(/* used internally by dp */)
-    );
-
-    control_unit cu(
-        .opcode(opcode), .funct(funct),
-        .reg_dst(reg_dst), .branch(branch), .mem_read(mem_read), .mem_to_reg(mem_to_reg),
-        .mem_write(mem_write), .alu_src(alu_src), .reg_write(reg_write), .alu_control(alu_control)
-    );
+    module_a a_inst(.clk(clk), .flag_out(flag_a), .flag_in(flag_b), .result(result));
+    module_b b_inst(.flag_in(flag_a), .flag_out(flag_b));
 endmodule
 ```
+
+— a shared wire per signal, declared once, feeding into whichever
+instance's port needs it as an input and out of whichever instance's port
+produces it as an output. Your actual job is reading the real port lists
+of `mips_datapath` and `control_unit` (both already written, in
+Exercises 8 and 9) and doing exactly this for every signal that has to
+cross between them — there's a specific, correct pairing for each one, and
+getting a single pairing backwards is the most likely way to end up with a
+CPU that compiles but doesn't run the test program correctly.
 
 That's genuinely close to the entire exercise's new code. What makes this a
 worthwhile capstone isn't the wiring — it's that, once wired, **you have a

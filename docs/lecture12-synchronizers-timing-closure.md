@@ -24,28 +24,27 @@ giving a potentially-metastable signal one extra clock cycle to resolve
 before anything else depends on it:
 
 ```verilog
-module synchronizer(
+module sync_chain #(parameter STAGES = 3) (
     input  clk,
-    input  async_in,
-    output sync_out
+    input  in_raw,
+    output out_sync
 );
-    reg [1:0] sync_ff;
+    reg [STAGES-1:0] chain;
     always @(posedge clk)
-        sync_ff <= {sync_ff[0], async_in};
-    assign sync_out = sync_ff[1];
+        chain <= {chain[STAGES-2:0], in_raw};
+    assign out_sync = chain[STAGES-1];
 endmodule
 ```
 
-The first flip-flop is the one allowed to go metastable (its input can
-change at any time); the second flip-flop only samples the *first flip-flop's
-already-registered output* — by the time the second edge arrives, the
-first flip-flop has almost certainly settled to a valid 0 or 1. This costs
-exactly one extra cycle of latency for the signal to become usable, in
-exchange for making the whole design's failure probability from this
-source negligible (real designs quantify this via **MTBF — mean time
-between failures** — a longer synchronizer chain, e.g. 3 flip-flops,
-pushes MTBF up further, at the cost of more latency; 2 stages is the
-common default).
+Each bit of `chain` is one flip-flop, all wired in series — every cycle,
+every stage copies whatever the *previous* stage held. The first flip-flop
+in the chain is the one allowed to go metastable (its input can change at
+any time); every later stage only samples an already-registered signal —
+by the time the signal reaches the last stage, the first flip-flop has
+almost certainly settled to a valid 0 or 1. More stages make the failure
+probability smaller still (real designs quantify this via **MTBF — mean
+time between failures**) at the cost of more latency; the exercise asks
+for the shortest chain still considered safe in practice.
 
 ## Debouncing: filtering a mechanical switch
 
@@ -54,27 +53,18 @@ mechanical switch, which can flicker between 0 and 1 several times over a
 few milliseconds before settling as it physically presses. A **debouncer**
 only accepts a new value once the (already-synchronized) input has been
 *consistently* different from the current output for some minimum number
-of consecutive cycles:
+of consecutive cycles.
 
-```verilog
-always @(posedge clk) begin
-    if (rst) begin
-        clean_out <= 1'b0;
-        counter   <= 0;
-    end else if (noisy_in == clean_out) begin
-        counter <= 0;                    // agrees with current output: no pending change
-    end else if (counter == STABLE_CYCLES-1) begin
-        clean_out <= noisy_in;           // disagreed for long enough: accept it
-        counter   <= 0;
-    end else begin
-        counter <= counter + 1;          // disagrees, but not long enough yet
-    end
-end
-```
-
-Notice this is, structurally, another counter-with-reset-condition —
-exactly Lecture 5's pattern, just gated by "does the input currently agree
-with our last accepted output" instead of a fixed enable signal.
+Structurally, this is another counter-with-reset-condition — exactly
+Lecture 5's pattern — just gated by a comparison instead of a fixed enable
+signal: a counter that increments every cycle the (synchronized) input
+*disagrees* with what's currently being output, gets reset back to zero
+the instant it agrees again, and only when that counter finally reaches
+the required streak length does the output actually change to match the
+input. Work out the exact `if`/`else if` priority yourself — it's the same
+shape as every priority-cascade register you've built since Lecture 4,
+just with an unusual condition (equality with the module's own output)
+deciding one of the branches.
 
 ## Where this fits in MIPS / architecture
 

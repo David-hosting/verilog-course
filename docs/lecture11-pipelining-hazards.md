@@ -62,19 +62,16 @@ even for forwarding, forcing at least one stall cycle no matter what — the
 ## Detecting the hazard
 
 The detection logic itself is simple combinational comparison — a small
-"hazard detection unit":
+"hazard detection unit" that has to be true only when **all** of the
+following hold at once: the instruction currently one stage ahead is
+actually going to write the register file; that destination register isn't
+`$0`; and the new instruction now entering the pipeline reads that exact
+register on (at least) one of its own source ports.
 
-```verilog
-assign stall = ex_stage_will_write
-             & (ex_stage_dest_reg != 0)                 // writing $0 never matters
-             & ((ex_stage_dest_reg == new_instr_src_reg1)
-              | (ex_stage_dest_reg == new_instr_src_reg2));
-```
-
-The `!= 0` check matters for the same reason `$zero` is special everywhere
-else in this course: a write to register 0 is architecturally a no-op, so
-it can never be the source of a real hazard, even if the register numbers
-happen to match.
+The middle condition matters for the same reason `$zero` is special
+everywhere else in this course: a write to register 0 is architecturally a
+no-op, so it can never be the source of a real hazard, even if the
+register numbers happen to match.
 
 ## Where this fits in MIPS / architecture
 

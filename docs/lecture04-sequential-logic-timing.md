@@ -60,13 +60,16 @@ inside `always @(posedge clk)`. Never mix them within the same always block.
 
 ## Reset and enable
 
-Real flip-flops almost always have extra control inputs:
+Real flip-flops almost always have extra control inputs. Here's one with a
+synchronous **set** (forces `q` to 1, the mirror image of a reset) and an
+enable, showing the general shape — an `if`/`else if` cascade, highest
+priority first, with "do nothing" (hold) as the implicit final case:
 
 ```verilog
-module dff_en_rst(input clk, input rst, input en, input d, output reg q);
+module dff_en_set(input clk, input set, input en, input d, output reg q);
     always @(posedge clk) begin
-        if (rst)
-            q <= 1'b0;
+        if (set)
+            q <= 1'b1;
         else if (en)
             q <= d;
         // else: hold current value (no assignment = implicit "keep q")
@@ -74,12 +77,15 @@ module dff_en_rst(input clk, input rst, input en, input d, output reg q);
 endmodule
 ```
 
-Note this is a **synchronous** reset — `rst` only takes effect on a clock
-edge, same as everything else in the block. (An *asynchronous* reset would
-be in the sensitivity list as `always @(posedge clk or posedge rst)`
-and take effect immediately, independent of the clock. Both exist in real
-designs; synchronous reset is simpler to reason about and is what we use
-throughout this course.)
+Note this is a **synchronous** set — `set` only takes effect on a clock
+edge, same as everything else in the block. This exercise asks for a
+*reset* instead (forcing `q` to 0 rather than 1) with the same priority
+shape — swap which condition wins and what it forces `q` to. (An
+*asynchronous* reset, for contrast, would be in the sensitivity list as
+`always @(posedge clk or posedge rst)` and take effect immediately,
+independent of the clock. Both synchronous and asynchronous resets exist in
+real designs; synchronous is simpler to reason about and is what this
+course uses throughout.)
 
 ## Electronics note: setup time, hold time, and metastability
 

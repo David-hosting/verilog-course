@@ -52,23 +52,15 @@ not just a style question).
 Many real FSMs need to *wait N cycles* in a state before moving on — a
 traffic light staying green for a fixed duration, a bus controller waiting
 out a fixed number of wait-states. The clean way to do this is a counter
-that only increments while the FSM is in that state, and resets to 0 the
-moment the FSM leaves it:
+that only increments while the FSM is in that state, and resets back to 0
+the moment the FSM leaves it — which is the same feedback-register idea as
+Lecture 5's counter, just gated by "are we staying in the same state" (a
+comparison between the state that's about to be latched and the one
+currently held) instead of a fixed enable signal.
 
-```verilog
-always @(posedge clk) begin
-    if (rst) begin
-        state <= S_INIT;
-        timer <= 0;
-    end else begin
-        state <= next_state;
-        timer <= (next_state == state) ? timer + 1 : 0;
-    end
-end
-```
-
-This is the same feedback-register idea as Lecture 5's counter, just gated
-by "are we staying in the same state."
+Working out exactly how to phrase that comparison — and what it should do
+to the counter in each of the two cases — is part of this lecture's
+exercise.
 
 ## Where this fits in MIPS / architecture
 

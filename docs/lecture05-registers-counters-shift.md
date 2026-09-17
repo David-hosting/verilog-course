@@ -8,17 +8,22 @@ an incrementer (or decrementer):
 
 ```verilog
 always @(posedge clk) begin
-    if (rst)      count <= 8'b0;
-    else if (load) count <= load_val;
-    else if (en)   count <= up_down ? count + 1'b1 : count - 1'b1;
+    if (rst)    count <= 8'b0;
+    else if (en) count <= count + 8'b1;
 end
 ```
 
 This is exactly the feedback-loop idea from Lecture 4, just with a
-combinational adder in the loop instead of a plain wire. Priority matters
-here the same way it did for the flip-flop: decide up front what wins when
-multiple control signals are asserted at once (this design: `rst` > `load` >
-`en`-gated count), and be consistent.
+combinational adder in the loop instead of a plain wire. This bare-bones
+version only counts up by one, unconditionally, while enabled. The
+exercise asks for two more capabilities layered on top — counting in
+*either* direction, and a parallel load that overrides counting entirely —
+which means more conditions competing for the same clock edge. Priority
+matters here exactly like it did for the flip-flop: decide up front what
+wins when several of `rst`/`load`/`en` are asserted at once. This example's
+priority order (`rst` beats `en`-gated counting) isn't necessarily the
+exercise's full order once `load` is added — the README spells out exactly
+where `load` sits in that priority.
 
 ## Concept: shift registers
 
@@ -42,14 +47,17 @@ changes (from a neighbor's `q value` instead of from a computed sum).
 
 ```verilog
 always @(posedge clk) begin
-    if (rst)       q <= 8'b0;
-    else if (en) begin
-        if (load)  q <= load_val;
-        else if (dir) q <= {q[6:0], serial_in}; // shift left, new bit at LSB side
-        else          q <= {serial_in, q[7:1]}; // shift right, new bit at MSB side
-    end
+    if (rst)     q <= 8'b0;
+    else if (en) q <= {q[6:0], serial_in}; // shift left only, new bit at LSB side
 end
 ```
+
+That's a SIPO shifting one direction. The exercise wants both directions
+*and* a parallel load, all sharing the same register — figure out where
+`load` and the direction choice (`dir`) each fit into the priority
+cascade, and what the right-shift version of `{q[6:0], serial_in}` looks
+like (which end of `q` does the incoming bit join, and which end falls
+off?).
 
 ## Where this fits in MIPS / architecture
 
