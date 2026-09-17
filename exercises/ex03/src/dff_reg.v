@@ -8,11 +8,15 @@ module dff_en_rst(
     output reg q
 );
 
-    // TODO: one always @(posedge clk) block, using nonblocking assignment.
-    // Three things can each want to change q on the same edge -- rst, en,
-    // and "neither" (hold). Only one outcome can win per edge; the README
-    // spells out which one takes priority over which.
-
+    // TODO: always @(posedge clk) block, using <= (nonblocking).
+    // Priority: rst (-> q <= 0) beats en (-> q <= d) beats hold (no change).
+    always @(posedge clk) begin
+        if (rst)
+            q <= 1'b0;
+        else if (en)
+            q <= d;
+        // else -->> hold current value.
+    end
 endmodule
 
 
@@ -24,10 +28,12 @@ module reg8(
     output [7:0] q
 );
 
-    // TODO: this register is 8 independent copies of dff_en_rst, one per
-    // bit, all sharing the same clk/rst/en. You already have a pattern for
-    // "stamp out N identical instances without writing them out by hand"
-    // from Lecture 2's ripple_carry_adder -- the same construct applies
-    // here. 
+    // TODO: instantiate 8 copies of dff_en_rst, one per bit, e.g.:
+    genvar i;
+    generate
+        for (i = 0; i < 8; i = i + 1) begin : bits
+            dff_en_rst ff(.clk(clk), .rst(rst), .en(en), .d(d[i]), .q(q[i]));
+        end
+    endgenerate
 
 endmodule
